@@ -7,8 +7,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -19,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hardik4u.log_alerts.model.LogEvent;
@@ -34,40 +33,33 @@ public class LogAlertsService {
 
 	@Autowired
 	LogAlertsRepository alertsRepository;
-	
-
 
 	public void processFile() {
 
-		
 		try (FileChannel inputChannel = new FileInputStream(logFilePath).getChannel()) {
-			
-			ObjectMapper jsonMapper = new ObjectMapper();
-			
-			List<LogEvent> list = new ArrayList<>();
+
+			ObjectMapper jsonMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+					false);
+
 			BufferedReader br = new BufferedReader(Channels.newReader(inputChannel, "UTF-8"));
-			br = Files.newBufferedReader(Paths.get(logFilePath));
 			Stream<String> lines = br.lines();
 			long starttime = System.currentTimeMillis();
-			lines.forEach(line -> {
+			lines.parallel().forEach(line -> {
 
 				try {
 
 					LogEvent logEvent = jsonMapper.readerFor(LogEvent.class).readValue(line);
+
 					Optional<LogEvent> optional = alertsRepository.findById(logEvent.getId());
 					if (optional.isPresent()) {
 						LogEvent logEventObj = optional.get();
-						if (logEventObj.getState() != null) {
-							Long duration = Math.abs(logEvent.getTimestamp() - logEventObj.getTimestamp());
-							logEvent.setDuration(duration);
-							if (duration > 4)
-								logEvent.setAlert(true);
-							else
-								logEvent.setAlert(false);
 
-						}
+						Long duration = Math.abs(logEvent.getTimestamp() - logEventObj.getTimestamp());
+						logEvent.setDuration(duration);
+
 					}
-					list.add(logEvent);
+
+					alertsRepository.save(logEvent);
 
 				} catch (JsonMappingException e) {
 					logger.error(e.getMessage());
@@ -77,7 +69,7 @@ public class LogAlertsService {
 
 			});
 
-			alertsRepository.saveAll(list);
+			// alertsRepository.saveAll(list);
 
 			long endtime = System.currentTimeMillis();
 			logger.info("Time Taken ms: " + (endtime - starttime));
