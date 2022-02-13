@@ -1,15 +1,23 @@
 # Getting Started
 
-### Reference Documentation
-For further reference, please consider the following sections:
+### System Requirements
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.6.3/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.6.3/maven-plugin/reference/html/#build-image)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/docs/2.6.3/reference/htmlsingle/#boot-features-jpa-and-spring-data)
+* Java 1.8
+* Maven 3.x (for compiling code and Jar file generation)
 
-### Guides
-The following guides illustrate how to use some features concretely:
+### Compile and Execution
 
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
+* For compiling project using Maven ( logtestfile.txt in the project rootfolder)
+	
+	mvn clean install -Dlogfile.path=logtestfile.txt
 
+
+* Once jar file has been generated you can run below command for executing code(sample logfile added in project root folder):
+		
+	java -jar -Dlogfile.path=logfile.txt target\log_alerts-0.0.1-SNAPSHOT.jar
+
+### Next steps:
+* Use of spring batch for saving objects in batch pool
+* Enhancement of test cases
+* Logger enhancements
+* Performance Enhancement
